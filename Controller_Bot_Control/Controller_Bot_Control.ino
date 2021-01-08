@@ -10,7 +10,7 @@
 
   2 x Joystick Modules
   1 x Arduino Nano
-  1 x Nano Breakout Board with headers for NRF
+  1 x Nano Breakout Board with headers for NRF2401 module
   1 x NRF2401 2.4gHz Radio Transceiver
   1 x 5 AA Battery Holder
   5 x 1.2V NiMh AA Batteries
@@ -121,14 +121,14 @@ void sendController() {
     remoteRadio.write(&dataSent, sizeof(dataSent));
 
    // Serial.print("VALS: ");
-   // printStuff();
+   // printVals();
   }
 
 }
 
 
 
-void printStuff() {
+void printVals() {
 
   Serial.print(dataSent.left_xAxis);
   Serial.print("  :  ");
