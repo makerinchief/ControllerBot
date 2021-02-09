@@ -1,4 +1,5 @@
 /*
+
   Controller Bot Control
   Justin C Kirk 2020
 
@@ -16,15 +17,34 @@
   5 x 1.2V NiMh AA Batteries
   1 x Breadboard Half Size
 
-
 */
 
+//NRFLite is used to make communication easy
+//https://github.com/dparson55/NRFLite
 #include <SPI.h>
-#include <nRF24L01.h>
-#include <RF24.h>
-RF24 remoteRadio(10, 9);  //CE, CSN
+#include <NRFLite.h>
 
-const byte tankBotAddress[6] = {"00001"};
+const static uint8_t CONTROLLER_ID = 1;
+const static uint8_t TANK_BOT_ID = 0;
+const static uint8_t RADIO_CE = 10;
+const static uint8_t RADIO_CSN = 9;
+
+NRFLite remoteRadio;
+
+
+struct ControllerPacket {
+
+  int16_t left_xAxis;
+  int16_t left_yAxis;
+  int16_t left_button;
+
+  int16_t right_xAxis;
+  int16_t right_yAxis;
+  int16_t right_button;
+
+};
+
+ControllerPacket controllerData;
 
 int leftXPin = 17; //A3
 int leftYPin = 16; //A2
@@ -40,106 +60,91 @@ int rightYVal = 0;
 int leftButtonVal = 0;
 int rightButtonVal = 0;
 
-struct SEND_DATA {
-
-  int16_t left_xAxis;
-  int16_t left_yAxis;
-  int16_t left_button;
-
-  int16_t right_xAxis;
-  int16_t right_yAxis;
-  int16_t right_button;
-};
-
-SEND_DATA dataSent;
-
-const int dataCount = 6;
-
 unsigned long remoteCurrent = 0;
 unsigned long remotePrevious = 0;
-unsigned long remoteReadPrevious = 0;
-const long remoteInterval = 100;
-
+long remoteInterval = 100;
 
 void setup() {
 
   Serial.begin(9600);
+
+  remoteRadio.init(CONTROLLER_ID, RADIO_CE, RADIO_CSN);
+
   pinMode(leftButtonPin, INPUT_PULLUP);
   pinMode(rightButtonPin, INPUT_PULLUP);
 
-  remoteRadio.begin();
-
-  remoteRadio.openWritingPipe(tankBotAddress);
-  remoteRadio.setPALevel(RF24_PA_HIGH);
-  remoteRadio.stopListening();
-
 }
-
 
 void loop() {
 
-  //testRadio_Send(100);
-  sendController();
-
-}
-
-void testRadio_Send(int delayTime) {
-
-  const char sendText[] = "Hello Bot";
-  remoteRadio.write(&sendText, sizeof(sendText));
-  Serial.print("Controller Sends: ");
-  Serial.println(sendText);
-  delay(delayTime);
-
-}
-
-
-
-
-void sendController() {
-
   remoteCurrent = millis();
 
-  if (remoteCurrent - remotePrevious >= remoteInterval) {
+  if (remoteCurrent - remotePrevious > remoteInterval) {
+    remotePrevious = remoteCurrent;
 
-    remotePrevious  = remoteCurrent;
+    TestController();
+    //SendController();
 
-    leftXVal = analogRead(leftXPin);
-    leftYVal = analogRead(leftYPin);
-    leftButtonVal = digitalRead(leftButtonPin);
-    rightXVal = analogRead(rightXPin);
-    rightYVal = analogRead(rightYPin);
-    rightButtonVal = digitalRead(rightButtonPin);
-
-    dataSent.left_xAxis = leftXVal;
-    dataSent.left_yAxis = leftYVal;
-    dataSent.left_button = leftButtonVal;
-    dataSent.right_xAxis = rightXVal;
-    dataSent.right_yAxis = rightYVal;
-    dataSent.right_button = rightButtonVal;
-
-    remoteRadio.write(&dataSent, sizeof(dataSent));
-
-   // Serial.print("VALS: ");
-   // printVals();
   }
+
 
 }
 
 
+void SendController() {
 
-void printVals() {
+  leftXVal = analogRead(leftXPin);
+  leftYVal = analogRead(leftYPin);
+  leftButtonVal = digitalRead(leftButtonPin);
+  rightXVal = analogRead(rightXPin);
+  rightYVal = analogRead(rightYPin);
+  rightButtonVal = digitalRead(rightButtonPin);
 
-  Serial.print(dataSent.left_xAxis);
+  controllerData.left_xAxis = leftXVal;
+  controllerData.left_yAxis = leftYVal;
+  controllerData.left_button = leftButtonVal;
+  controllerData.right_xAxis = rightXVal;
+  controllerData.right_yAxis = rightYVal;
+  controllerData.right_button = rightButtonVal;
+
+  PrintData();
+
+  remoteRadio.send(TANK_BOT_ID, &controllerData, sizeof(controllerData));
+
+}
+
+
+void TestController() {
+
+  leftXVal = analogRead(leftXPin);
+  leftYVal = analogRead(leftYPin);
+  leftButtonVal = digitalRead(leftButtonPin);
+  rightXVal = analogRead(rightXPin);
+  rightYVal = analogRead(rightYPin);
+  rightButtonVal = digitalRead(rightButtonPin);
+
+  controllerData.left_xAxis = leftXVal;
+  controllerData.left_yAxis = leftYVal;
+  controllerData.left_button = leftButtonVal;
+  controllerData.right_xAxis = rightXVal;
+  controllerData.right_yAxis = rightYVal;
+  controllerData.right_button = rightButtonVal;
+
+  PrintData();
+}
+
+void PrintData() {
+
+  Serial.print(controllerData.left_xAxis);
   Serial.print("  :  ");
-  Serial.print(dataSent.left_yAxis);
+  Serial.print(controllerData.left_yAxis);
   Serial.print("  :  ");
-  Serial.print(dataSent.left_button);
+  Serial.print(controllerData.left_button);
   Serial.print("  :  ");
-  Serial.print(dataSent.right_xAxis);
+  Serial.print(controllerData.right_xAxis);
   Serial.print("  :  ");
-  Serial.print(dataSent.right_yAxis);
+  Serial.print(controllerData.right_yAxis);
   Serial.print("  :  ");
-  Serial.println(dataSent.right_button);
+  Serial.println(controllerData.right_button);
 
 }
