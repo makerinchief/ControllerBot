@@ -26,6 +26,7 @@
 
 const static uint8_t CONTROLLER_ID = 1;
 const static uint8_t TANK_BOT_ID = 0;
+
 const static uint8_t RADIO_CE = 10;
 const static uint8_t RADIO_CSN = 9;
 
@@ -62,11 +63,11 @@ int rightButtonVal = 0;
 
 unsigned long remoteCurrent = 0;
 unsigned long remotePrevious = 0;
-long remoteInterval = 100;
+long remoteInterval = 10;
 
 void setup() {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   remoteRadio.init(CONTROLLER_ID, RADIO_CE, RADIO_CSN);
 
@@ -77,17 +78,26 @@ void setup() {
 
 void loop() {
 
-  remoteCurrent = millis();
+    remoteCurrent = millis();
+  
+    if (remoteCurrent - remotePrevious > remoteInterval) {
+  
+      //TestController();
+      SendController();
+      PrintData();
+  
+      remotePrevious = remoteCurrent;
+    }
 
-  if (remoteCurrent - remotePrevious > remoteInterval) {
-    remotePrevious = remoteCurrent;
-
-    TestController();
-    //SendController();
-
-  }
+  //TestController();
+  //SendController();
+  //PrintData();
 
 
+
+    
+
+  
 }
 
 
@@ -106,8 +116,6 @@ void SendController() {
   controllerData.right_xAxis = rightXVal;
   controllerData.right_yAxis = rightYVal;
   controllerData.right_button = rightButtonVal;
-
-  PrintData();
 
   remoteRadio.send(TANK_BOT_ID, &controllerData, sizeof(controllerData));
 
@@ -130,7 +138,6 @@ void TestController() {
   controllerData.right_yAxis = rightYVal;
   controllerData.right_button = rightButtonVal;
 
-  PrintData();
 }
 
 void PrintData() {
