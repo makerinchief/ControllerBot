@@ -1,2 +1,8 @@
 # ControllerBot
- Project Files for the Controller Robot
+
+Project Files for Controller Bot 
+https://makerinchief.com/meka-bots/controller-bot/
+ 
+Code is written in th Arduino IDE and uses the NRF Lite library 
+
+https://github.com/dparson55/NRFLite
