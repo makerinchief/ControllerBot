@@ -1,6 +1,6 @@
 # ControllerBot
 
-Project Files for Controller Bot
+Project files for Controller Bot
 
 https://makerinchief.com/meka-bots/controller-bot/
 
